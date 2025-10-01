@@ -1,0 +1,139 @@
+/* =================================================================
+Pemrogram      : Kelompok RE-01/1
+  1. 04-Deva Kristiano      NIM:4.34.24.3.06
+  2. 12-Muhammad Ady Pasha  NIM:4.34.24.3.12
+  3. 22-Robiatu Salamah     NIM:4.34.24.3.24
+  4. 23.Wahyu Indra         NIM:4.34.24.3.25
+Tgl.Praktikum  : Rabu, 24 September 2025
+=====================================================================
+Proyek01-Luaran
+Yx0104a-T7R.c
+  program untuk menyalakan tampilan 7-Segment dengan teknik scanning
+---------------------------------------------------------------------
+Komponen:
+- 4x T7R (7-Segment Common Anode)
+- 8x R150 (Resistor 150 ohm)
+===================================================================*/
+
+//=== Pustaka ===
+#include <mega8535.h>                   // ATmega8535      
+#include <delay.h>                      // Fungsi delay
+
+//=== Deklarasi Tabel 7-Segment (Common Anode) ===
+// Format: a,b,c,d,e,f,g,dp (Active LOW - 0=nyala, 1=mati)
+unsigned char tabel_7seg[] = {
+    0xC0, // 0 - a,b,c,d,e,f
+    0xF9, // 1 - b,c
+    0xA4, // 2 - a,b,d,e,g
+    0xB0, // 3 - a,b,c,d,g
+    0x99, // 4 - b,c,f,g
+    0x92, // 5 - a,c,d,f,g
+    0x82, // 6 - a,c,d,e,f,g
+    0xF8, // 7 - a,b,c
+    0x80, // 8 - a,b,c,d,e,f,g
+    0x90, // 9 - a,b,c,d,f,g
+    0x88, // A - a,b,c,e,f,g
+    0x83, // b - c,d,e,f,g
+    0xC6, // C - a,d,e,f
+    0xA1, // d - b,c,d,e,g
+    0x86, // E - a,d,e,f,g
+    0x8E  // F - a,e,f,g
+};
+
+unsigned char karakter_khusus [] ={
+ 0xA4,
+ 0xA1,
+ 0xC0,
+ 0x99
+};
+//=== Deklarasi Pemilihan Digit ===
+// Active LOW (0=nyala, 1=mati) untuk Common Anode
+unsigned char digit[] = {
+    0xFE, // Digit 1 - 1111 1110
+    0xFD, // Digit 2 - 1111 1101
+    0xFB, // Digit 3 - 1111 1011
+    0xF7  // Digit 4 - 1111 0111
+};
+
+//=== Sub Program: Tampilkan Angka dengan Scanning ===
+void tampilkan(unsigned int bilangan) {
+    char ribuan, ratusan, puluhan, satuan;
+    
+    // Memecah bilangan menjadi digit-digit
+    ribuan = bilangan / 1000;                    // Ribuan
+    ratusan = (bilangan % 1000) / 100;           // Ratusan
+    puluhan = (bilangan % 100) / 10;             // Puluhan
+    satuan = bilangan % 10;                      // Satuan
+    
+    // Teknik Scanning: Tampilkan digit bergantian dengan cepat
+    PORTB = digit[3];                            // Aktifkan digit 1
+    PORTD = tabel_7seg[ribuan];                  // Tampilkan ribuan
+    delay_ms(2);                                 // Delay singkat
+    
+    PORTB = digit[2];                            // Aktifkan digit 2
+    PORTD = tabel_7seg[ratusan];                 // Tampilkan ratusan
+    delay_ms(2);
+    
+    PORTB = digit[1];                            // Aktifkan digit 3
+    PORTD = tabel_7seg[puluhan];                 // Tampilkan puluhan
+    delay_ms(2);
+    
+    PORTB = digit[0];                            // Aktifkan digit 4
+    PORTD = tabel_7seg[satuan];                  // Tampilkan satuan
+    delay_ms(2);
+}
+
+//=== Sub Program: Counter Down dari 9999 ke 0000 ===
+void counter_down() {
+    unsigned int angka;
+    unsigned long refresh_count;
+    
+    // Counter down dari 9999 ke 0000
+    for(angka = 9999; angka > 0; angka--) {
+        // Tampilkan setiap angka selama 500 cycle refresh
+        for(refresh_count = 0; refresh_count < 15; refresh_count++) {
+            tampilkan(angka);
+        }
+        delay_ms(100); // Delay antar angka
+    }
+    
+    // Tampilkan 0000 selamanya setelah selesai
+    while(1) {
+        tampilkan(0);
+    }
+}
+
+//=== Sub Program: Tampilkan Angka Statis ===
+void tampilkan_statis(unsigned int bilangan) {
+    unsigned long i;
+    // Tampilkan angka tertentu selamanya
+    for(i = 0; i < 10000; i++) {
+        tampilkan(bilangan);
+    }
+}
+
+//=== Pengesetan Awal ===
+void main(void) {
+    // Konfigurasi PORT
+    DDRD = 0xFF;    // PORTA sebagai output data 7-segment
+    DDRB = 0xFF;    // PORTB sebagai output seleksi digit
+    
+    // Inisialisasi
+    PORTD = 0xFF;   // Matikan semua segmen
+    PORTB = 0xFF;   // Matikan semua digit
+    
+    //=== Program Utama ===
+    while(1){
+        //=== PILIH SALAH SATU MODE DENGAN MENG-UNCOMMENT ===
+        
+        // Mode 1: Tampilkan angka 1234 (Tugas 1)
+        tampilkan();
+        
+        // Mode 2: Counter down 9999-0000 (Tugas 2)
+        // counter_down();
+        
+        
+        // Mode 3: Tampilkan angka 5678
+        // tampilkan_statis(5678);       
+    }
+  }  
