@@ -1,0 +1,73 @@
+/* =================================================================
+Pemrogram      : Kelompok RE-01/1
+  1. 04 Deva Kristiano     NIM:4.34.24.3.06
+  2. 12-Muhammad Ady Pasha   NIM:4.34.24.3.14
+  3. 22-Robiatu Salamah    NIM:4.34.24.3.24
+  4. 23-Wahyu Indra        NIM:4.34.24.3.25
+Tgl.Praktikum  : Rabu, 24 September 2025
+=====================================================================
+Proyek01-Luaran
+Yx0104a-T7R.c
+  program untuk menyalakan tampilan 7-Segment dengan teknik scanning
+---------------------------------------------------------------------
+Komponen:
+- 4x T7R (7-Segment Common Anode)
+- 8x R150 (Resistor 150 ohm)
+
+
+#include <mega8535.h>    
+#include <delay.h>
+
+//=== Tabel 7-segment untuk Common Cathode (0–F) ===
+// Akan dibalik dengan NOT (~) karena hardware Common Anode
+unsigned char tabel_7seg[16] = {
+  0x3F, // 0
+  0x06, // 1
+  0x5B, // 2
+  0x4F, // 3
+  0x66, // 4
+  0x6D, // 5
+  0x7D, // 6
+  0x07, // 7
+  0x7F, // 8
+  0x6F, // 9
+  0x77, // A
+  0x7C, // b
+  0x39, // C
+  0x5E, // d
+  0x79, // E
+  0x71  // F
+};
+
+//=== Array pemilih digit ===
+// Asumsi aktif LOW (0 = nyala)
+unsigned char digit[4] = {
+  0b1110, // digit 1 aktif
+  0b1101, // digit 2 aktif
+  0b1011, // digit 3 aktif
+  0b0111  // digit 4 aktif
+};
+
+//=== Data tampilan "2D11" ===
+unsigned char data_display[4];
+
+void main(void) {
+  // PORTD untuk segmen, PORTA untuk digit
+  DDRD = 0xFF;   // output segmen
+  DDRB = 0x0F;   // output pemilih digit (4 bit bawah)
+
+  // Isi data_display sesuai tabel
+  data_display[0] = tabel_7seg[2];   // angka 2
+  data_display[1] = tabel_7seg[13];  // huruf D
+  data_display[2] = tabel_7seg[2];   // angka 1
+  data_display[3] = tabel_7seg[3];   // angka 1
+
+  while (1) {
+    int i;
+    for(i=0; i<4; i++){
+      PORTD = ~data_display[i];  // data segmen (dibalik untuk Common Anode)
+      PORTB = digit[i];          // pilih digit
+      delay_ms(70);               // delay kecil ? scanning cepat
+    }
+  }
+}
